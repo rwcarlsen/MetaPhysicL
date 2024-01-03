@@ -39,6 +39,7 @@
 #include "metaphysicl/testable.h"
 
 #include <limits>
+#include <string>
 #include <ostream>
 
 namespace MetaPhysicL {
@@ -108,6 +109,10 @@ public:
   template <typename T2>
   DualNumber & operator= (const T2 & scalar);
 
+  inline std::string show() const {return _label.size() == 0 ? std::to_string(_val) : _label;}
+  inline std::string label() const {return _label;}
+  inline void label(const std::string& s) const {_label = s;}
+
   T& value();
 
   const T& value() const;
@@ -164,6 +169,7 @@ public:
 private:
   T _val;
   D _deriv;
+  mutable std::string _label;
 };
 
 // Helper class to handle partial specialization for DualNumber

@@ -85,6 +85,7 @@ inline
 DualNumber<T,D,asd> &
 DualNumber<T,D,asd>::operator=(const DualNumber<T2,D2,asd> & dn)
 {
+  _label = dn._label;
   _val = dn.value();
 
   if (!allow_skipping_derivatives || do_derivatives)
@@ -98,6 +99,7 @@ inline
 DualNumber<T,D,asd> &
 DualNumber<T,D,asd>::operator=(const DualNumber<T,D,asd> & dn)
 {
+  _label = dn._label;
   _val = dn.value();
 
   if (!allow_skipping_derivatives || do_derivatives)
@@ -112,6 +114,7 @@ inline
 DualNumber<T,D,asd> &
 DualNumber<T,D,asd>::operator=(DualNumber<T,D,asd> && dn)
 {
+  _label = std::move(dn._label);
   _val = std::move(dn.value());
 
   if (!allow_skipping_derivatives || do_derivatives)
@@ -127,6 +130,7 @@ inline
 DualNumber<T,D,asd> &
 DualNumber<T,D,asd>::operator=(const NotADuckDualNumber<T2,D2> & nd_dn)
 {
+  _label = nd_dn._label;
   _val = nd_dn.value();
 
   if (!allow_skipping_derivatives || do_derivatives)
@@ -138,7 +142,7 @@ DualNumber<T,D,asd>::operator=(const NotADuckDualNumber<T2,D2> & nd_dn)
 template <typename T, typename D, bool asd>
 inline
 DualNumber<T,D,asd>::DualNumber(const DualNumber<T,D,asd> & dn) :
-    _val(dn.value())
+    _val(dn.value()), _label(dn._label)
 {
   if (!allow_skipping_derivatives || do_derivatives)
     _deriv = dn.derivatives();
@@ -148,7 +152,7 @@ DualNumber<T,D,asd>::DualNumber(const DualNumber<T,D,asd> & dn) :
 template <typename T, typename D, bool asd>
 inline
 DualNumber<T,D,asd>::DualNumber(DualNumber<T,D,asd> && dn) :
-    _val(std::move(dn.value()))
+    _val(std::move(dn.value())), _label(std::move(dn._label))
 {
   if (!allow_skipping_derivatives || do_derivatives)
     _deriv = std::move(dn.derivatives());
@@ -159,7 +163,7 @@ template <typename T, typename D, bool asd>
 template <typename T2, typename D2>
 inline
 DualNumber<T,D,asd>::DualNumber(const DualNumberSurrogate<T2,D2> & dns) :
-    _val(dns.value())
+    _val(dns.value()), _label(dns._label)
 {
   if (!allow_skipping_derivatives || do_derivatives)
   {
@@ -175,6 +179,7 @@ inline
 DualNumber<T,D,asd> &
 DualNumber<T,D,asd>::operator=(const DualNumberSurrogate<T2,D2> & dns)
 {
+  _label = dns._label;
   _val = dns.value();
 
   if (!allow_skipping_derivatives || do_derivatives)
@@ -359,6 +364,8 @@ DualNumber<T,D,asd>::operator opname##= (const T2& in) \
   { \
     simplecalc; \
   } \
+  if (_label.size() > 0) \
+    _label = "("#opname" " + show() + " " + std::to_string(in) + ")"; \
   this->value() opname##= in; \
   return *this; \
 } \
@@ -373,6 +380,8 @@ DualNumber<T,D,asd>::operator opname##= (const DualNumber<T2,D2,asd>& in) \
   { \
     dualcalc; \
   } \
+  if (_label.size() + in._label.size() > 0) \
+    _label = "("#opname" " + show() + " " + in.show() + ")"; \
   this->value() opname##= in.value(); \
   return *this; \
 } \
@@ -387,6 +396,8 @@ DualNumber<T,D,asd>::operator opname##= (const NotADuckDualNumber<T2,D2>& in) \
   { \
     dualcalc; \
   } \
+  if (_label.size() + in._label.size() > 0) \
+    _label = "("#opname" " + show() + " " + in.show() + ")"; \
   this->value() opname##= in.value(); \
   return *this; \
 } \
@@ -401,6 +412,8 @@ operator opname (const DualNumber<T,D,asd>& a, const DualNumber<T2,D2,asd>& b) \
     DS; \
   DS returnval = a; \
   returnval opname##= b; \
+  if (a.label().size() + b.label().size() > 0) \
+    returnval.label("("#opname" " + a.show() + " " + b.show() + ")"); \
   return returnval; \
 } \
  \
@@ -413,6 +426,8 @@ operator opname (const T& a, const DualNumber<T2,D,asd>& b) \
     functorname##Type<DualNumber<T2,D,asd>,T,true>::supertype DS; \
   DS returnval = a; \
   returnval opname##= b; \
+  if (b.label().size() > 0) \
+    returnval.label("("#opname" " + std::to_string(a) + " " + b.show() + ")"); \
   return returnval; \
 } \
  \
@@ -425,6 +440,8 @@ operator opname (const DualNumber<T,D,asd>& a, const T2& b) \
     functorname##Type<DualNumber<T,D,asd>,T2,false>::supertype DS; \
   DS returnval = a; \
   returnval opname##= b; \
+  if (a.label().size() > 0) \
+    returnval.label("("#opname" " + a.show() + " " + std::to_string(b) + ")"); \
   return returnval; \
 }
 
@@ -433,6 +450,7 @@ operator opname (const DualNumber<T,D,asd>& a, const T2& b) \
 // more complete and define the move-from-b alternatives as well, but
 // those would require additional support to correctly handle
 // division, subtraction, or non-commutative addition/multiplication
+// TODO: insert expression extraction cout/prints in the move operators and be sure to move the _label vals too!
 #ifdef METAPHYSICL_USE_STD_MOVE
 #define DualNumber_op(opname, functorname, simplecalc, dualcalc) \
         DualNumber_preop(opname, functorname, simplecalc, dualcalc) \
