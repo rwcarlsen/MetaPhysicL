@@ -109,7 +109,13 @@ public:
   template <typename T2>
   DualNumber & operator= (const T2 & scalar);
 
-  inline std::string show() const {return _label.size() == 0 ? std::to_string(_val) : _label;}
+  inline std::string show() const {return _label.size() == 0 ? str(_val) : _label;}
+
+  template <typename T2>
+  inline std::string str(const T2& v) const {return std::to_string(v);}
+  template <typename T3, typename D2, bool B2>
+  inline std::string str(const DualNumber<T3, D2, B2>& v) const {return v.str(v.value());}
+
   inline std::string label() const {return _label;}
   inline void label(const std::string& s) const {_label = s;}
 

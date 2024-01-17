@@ -72,7 +72,7 @@ DualNumber<T,D,asd>::boolean_test() const { return _val; }
 template <typename T, typename D, bool asd>
 inline
 DualNumber<T,D,asd>
-DualNumber<T,D,asd>::operator- () const { return DualNumber<T,D,asd>(-_val, -_deriv); }
+DualNumber<T,D,asd>::operator- () const { auto n = DualNumber<T,D,asd>(-_val, -_deriv); n.label("(* -1 " + show() + ")"); return n;}
 
 template <typename T, typename D, bool asd>
 inline
@@ -584,6 +584,7 @@ inline \
 DualNumber<T,D,asd> funcname (const DualNumber<T,D,asd> & in) \
 { \
   DualNumber<T,D,asd> returnval = in; \
+  returnval.label("("#funcname" " + in.show() + ")"); \
   T funcval = std::funcname(in.value()); \
   if (!asd || in.do_derivatives) \
   { \
@@ -631,6 +632,7 @@ inline \
 DualNumber<T,D,asd> funcname (DualNumber<T,D,asd> in) \
 { \
   T funcval = std::funcname(in.value()); \
+  in.label("("#funcname" " + in.show() + ")"); \
   if (!asd || in.do_derivatives) \
   { \
     precalc; \
